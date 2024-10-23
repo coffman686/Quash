@@ -7,12 +7,23 @@
 #include <fcntl.h>
 
 #define MAX_INPUT 1024
+#define MAX_JOBS 100
+
+typedef struct {
+    pid_t pid;
+    int job_id;
+    char command[MAX_INPUT];
+} Job;
+
+static Job jobs[MAX_JOBS]; // Array to keep track of background jobs
+static int job_count = 0;   // Counter for background jobs
 
 int main() {
     char input[MAX_INPUT];
     printf("Welcome to Quash!\n");
 
     while (true) {
+        handle_background_jobs(); // Check for completed background jobs
         printf("[QUASH]$ ");
         if (fgets(input, MAX_INPUT, stdin) == NULL) {
             perror("fgets");
@@ -38,19 +49,27 @@ int main() {
     return 0;
 }
 
+
 void execute_command(char *command) {
-    // Example to parse command and execute built-in or external command
     char *args[MAX_INPUT];
     char *token = strtok(command, " ");
     int i = 0;
+    int background = 0; // Flag for background execution
 
+    // Tokenize input and check for background execution
     while (token != NULL) {
         args[i++] = token;
         token = strtok(NULL, " ");
     }
     args[i] = NULL;
 
-    // Check for built-ins (like cd, pwd, etc.)
+    // Check for background execution
+    if (i > 0 && strcmp(args[i - 1], "&") == 0) {
+        background = 1;
+        args[i - 1] = NULL; // Remove '&' from args
+    }
+
+    // Check if it's a built-in command
     if (strcmp(args[0], "cd") == 0) {
         quash_cd(args);
     } else if (strcmp(args[0], "pwd") == 0) {
@@ -60,14 +79,29 @@ void execute_command(char *command) {
     } else if (strcmp(args[0], "export") == 0) {
         quash_export(args);
     } else {
-        // External command handling (e.g., ls, grep)
+        // External command handling
         pid_t pid = fork();
         if (pid == 0) {
+            // Child process
             execvp(args[0], args);
-            perror("execvp");
+            perror("execvp"); // Exec only returns on error
             exit(EXIT_FAILURE);
+        } else if (pid > 0) {
+            // Parent process
+            if (background) {
+                // Store job details
+                jobs[job_count].pid = pid;
+                jobs[job_count].job_id = job_count + 1; // Job IDs start from 1
+                strncpy(jobs[job_count].command, command, MAX_INPUT);
+                printf("Background job started: [%d] %d %s\n", jobs[job_count].job_id, pid, command);
+                job_count++;
+            } else {
+                // Wait for the foreground job to complete
+                waitpid(pid, NULL, 0);
+            }
         } else {
-            waitpid(pid, NULL, 0);
+            // Fork error
+            perror("fork");
         }
     }
 }

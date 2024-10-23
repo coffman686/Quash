@@ -7,8 +7,8 @@ SRC_DIR = src
 BUILD_DIR = build
 
 # Source files and object files
-SRCS = $(SRC_DIR)/execute.c $(SRC_DIR)/builtins.c $(SRC_DIR)/parsing/parse_interface.c
-OBJS = $(BUILD_DIR)/execute.o $(BUILD_DIR)/builtins.o $(BUILD_DIR)/parse_interface.o
+SRCS = $(SRC_DIR)/execute.c $(SRC_DIR)/builtins.c $(SRC_DIR)/parsing/parse_interface.c $(SRC_DIR)/jobs.c
+OBJS = $(BUILD_DIR)/execute.o $(BUILD_DIR)/builtins.o $(BUILD_DIR)/parse_interface.o $(BUILD_DIR)/jobs.o
 
 # Executable
 EXEC = quash
