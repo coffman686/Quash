@@ -5,6 +5,8 @@
 
 // Function declarations
 void execute_command(char *command);
+void execute_single_command(char *command);
+void execute_piped_commands(char **pipe_commands, int pipe_count);
 void run_builtin(char **args);
 void handle_jobs();
 void redirect_io(char *input_file, char *output_file, bool append);

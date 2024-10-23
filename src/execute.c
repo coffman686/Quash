@@ -49,8 +49,75 @@ int main() {
     return 0;
 }
 
-
+// Function to execute commands
 void execute_command(char *command) {
+    char *pipe_commands[MAX_INPUT];
+    int pipe_count = 0;
+
+    // Split by pipe
+    char *token = strtok(command, "|");
+    while (token != NULL) {
+        pipe_commands[pipe_count++] = token;
+        token = strtok(NULL, "|");
+    }
+    pipe_commands[pipe_count] = NULL;
+
+    if (pipe_count > 1) {
+        execute_piped_commands(pipe_commands, pipe_count);
+    } else {
+        // Handle non-piped command
+        execute_single_command(command);
+    }
+}
+
+// Function to execute piped commands
+void execute_piped_commands(char **pipe_commands, int pipe_count) {
+    int pipefd[2];
+    pid_t pid;
+    int fd_in = 0;  // Initial input is from stdin
+
+    for (int i = 0; i < pipe_count; i++) {
+        pipe(pipefd);  // Create a pipe
+
+        if ((pid = fork()) == -1) {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        } else if (pid == 0) {
+            // Child process
+
+            // If this is not the first command, get input from the previous pipe
+            if (fd_in != 0) {
+                dup2(fd_in, STDIN_FILENO);
+                close(fd_in);
+            }
+
+            // If this is not the last command, pipe output to the next command
+            if (i < pipe_count - 1) {
+                dup2(pipefd[1], STDOUT_FILENO);
+            }
+
+            // Close pipe read end
+            close(pipefd[0]);
+            close(pipefd[1]);
+
+            // Execute the command
+            execute_single_command(pipe_commands[i]);
+            exit(EXIT_FAILURE);
+        } else {
+            // Parent process
+            close(pipefd[1]); // Close write end in the parent
+            fd_in = pipefd[0]; // Save the read end for the next command
+        }
+    }
+
+    // Wait for all children to complete
+    for (int i = 0; i < pipe_count; i++) {
+        wait(NULL);
+    }
+}
+
+// Function to execute a single command (built-in or external)
+void execute_single_command(char *command) {
     char *args[MAX_INPUT];
     char *token = strtok(command, " ");
     int i = 0;

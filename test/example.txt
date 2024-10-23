@@ -1,4 +1,5 @@
-Hello, world!
-This is a test file.
-Grep is a useful command.
-Have a great day!
+apple
+banana
+apple
+orange
+banana
