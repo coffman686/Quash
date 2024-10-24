@@ -167,9 +167,11 @@ void execute_single_command(char *command) {
         pid_t pid = fork();
         if (pid == 0) {
             // Child process
-            execvp(args[0], args);
-            perror("execvp"); // Exec only returns on error
-            exit(EXIT_FAILURE);
+            if (execvp(args[0], args) == -1) {
+                // If execvp fails, print custom error message
+                fprintf(stderr, "command not found: %s\n", args[0]);
+                exit(EXIT_FAILURE); // Ensure the child process terminates
+            }
         } else if (pid > 0) {
             if (background) {
                 // Store job details for background jobs
@@ -191,5 +193,6 @@ void execute_single_command(char *command) {
     // Restore original I/O after the command finishes
     restore_io();
 }
+
 
 
