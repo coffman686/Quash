@@ -119,21 +119,38 @@ void execute_piped_commands(char **pipe_commands, int pipe_count) {
 // Function to execute a single command (built-in or external)
 void execute_single_command(char *command) {
     char *args[MAX_INPUT];
+    char *input_file = NULL;
+    char *output_file = NULL;
+    int append = 0; // Flag to indicate if we should append to the output file
+    int background = 0;
+    
+    // Create a copy of the original command for background job tracking
+    char command_copy[MAX_INPUT];
+    strncpy(command_copy, command, MAX_INPUT);
+
+    // Tokenize the command string, checking for redirection operators
     char *token = strtok(command, " ");
     int i = 0;
-    int background = 0; // Flag for background execution
-
-    // Tokenize input and check for background execution
     while (token != NULL) {
-        args[i++] = token;
+        if (strcmp(token, ">") == 0) {
+            output_file = strtok(NULL, " ");
+        } else if (strcmp(token, ">>") == 0) {
+            output_file = strtok(NULL, " ");
+            append = 1;
+        } else if (strcmp(token, "<") == 0) {
+            input_file = strtok(NULL, " ");
+        } else if (strcmp(token, "&") == 0) {
+            background = 1; // Run in background
+        } else {
+            args[i++] = token; // Normal command/argument
+        }
         token = strtok(NULL, " ");
     }
     args[i] = NULL;
 
-    // Check for background execution
-    if (i > 0 && strcmp(args[i - 1], "&") == 0) {
-        background = 1;
-        args[i - 1] = NULL; // Remove '&' from args
+    // Handle redirection if needed
+    if (input_file != NULL || output_file != NULL) {
+        redirect_io(input_file, output_file, append);
     }
 
     // Check if it's a built-in command
@@ -154,13 +171,12 @@ void execute_single_command(char *command) {
             perror("execvp"); // Exec only returns on error
             exit(EXIT_FAILURE);
         } else if (pid > 0) {
-            // Parent process
             if (background) {
-                // Store job details
+                // Store job details for background jobs
                 jobs[job_count].pid = pid;
-                jobs[job_count].job_id = job_count + 1; // Job IDs start from 1
-                strncpy(jobs[job_count].command, command, MAX_INPUT);
-                printf("Background job started: [%d] %d %s\n", jobs[job_count].job_id, pid, command);
+                jobs[job_count].job_id = job_count + 1; 
+                strncpy(jobs[job_count].command, command_copy, MAX_INPUT);
+                printf("Background job started: [%d] %d %s\n", jobs[job_count].job_id, pid, command_copy);
                 job_count++;
             } else {
                 // Wait for the foreground job to complete
@@ -171,4 +187,9 @@ void execute_single_command(char *command) {
             perror("fork");
         }
     }
+
+    // Restore original I/O after the command finishes
+    restore_io();
 }
+
+

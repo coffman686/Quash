@@ -10,6 +10,7 @@ void execute_piped_commands(char **pipe_commands, int pipe_count);
 void run_builtin(char **args);
 void handle_jobs();
 void redirect_io(char *input_file, char *output_file, bool append);
+void restore_io();  // Added restore_io declaration
 void handle_pipes(char **commands);
 void export_variable(char *env_var);
 void change_directory(char *path);
