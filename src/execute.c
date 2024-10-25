@@ -1,4 +1,5 @@
 #include "quash.h"
+#include "jobs.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,23 +7,14 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-#define MAX_INPUT 1024
-#define MAX_JOBS 100
-
-typedef struct {
-    pid_t pid;
-    int job_id;
-    char command[MAX_INPUT];
-} Job;
-
-static Job jobs[MAX_JOBS]; // Array to keep track of background jobs
-static int job_count = 0;   // Counter for background jobs
+Job jobs[MAX_JOBS];  // Array to keep track of background jobs
+int job_count = 0;   // Counter for background jobs
 
 int main() {
     char input[MAX_INPUT];
     printf("Welcome to Quash!\n");
 
-    while (true) {
+    while (1) {
         handle_background_jobs(); // Check for completed background jobs
         printf("[QUASH]$ ");
         if (fgets(input, MAX_INPUT, stdin) == NULL) {
@@ -49,7 +41,6 @@ int main() {
     return 0;
 }
 
-// Function to execute commands
 void execute_command(char *command) {
     char *pipe_commands[MAX_INPUT];
     int pipe_count = 0;
@@ -162,6 +153,8 @@ void execute_single_command(char *command) {
         quash_echo(args);
     } else if (strcmp(args[0], "export") == 0) {
         quash_export(args);
+    } else if (strcmp(args[0], "jobs") == 0) {
+        list_jobs(); // Display background jobs if "jobs" command is issued
     } else {
         // External command handling
         pid_t pid = fork();
@@ -193,6 +186,3 @@ void execute_single_command(char *command) {
     // Restore original I/O after the command finishes
     restore_io();
 }
-
-
-
