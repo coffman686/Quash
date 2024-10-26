@@ -7,8 +7,8 @@ SRC_DIR = src
 BUILD_DIR = build
 
 # Source files and object files
-SRCS = $(SRC_DIR)/execute.c $(SRC_DIR)/builtins.c $(SRC_DIR)/parsing/parse_interface.c $(SRC_DIR)/jobs.c
-OBJS = $(BUILD_DIR)/execute.o $(BUILD_DIR)/builtins.o $(BUILD_DIR)/parse_interface.o $(BUILD_DIR)/jobs.o
+SRCS = $(SRC_DIR)/execute.c $(SRC_DIR)/builtins.c $(SRC_DIR)/parsing/redirect.c $(SRC_DIR)/jobs.c
+OBJS = $(BUILD_DIR)/execute.o $(BUILD_DIR)/builtins.o $(BUILD_DIR)/redirect.o $(BUILD_DIR)/jobs.o
 
 # Executable
 EXEC = quash
@@ -26,7 +26,8 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Documentation generation
-doc:
+doc: Doxyfile
+	@mkdir -p $(DOC_DIR)
 	doxygen Doxyfile
 
 # Clean up generated files

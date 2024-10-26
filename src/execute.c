@@ -41,10 +41,10 @@ void execute_command(char *command) { // func to decide if command is singluar o
     char *pipe_commands[MAX_INPUT];
     int pipe_count = 0;
 
-    char *token = strtok(command, "|"); // if command has a pipe seperate those commands
-    while (token != NULL) {
-        pipe_commands[pipe_count++] = token;
-        token = strtok(NULL, "|");
+    char *element = strtok(command, "|"); // if command has a pipe seperate those commands
+    while (element != NULL) {
+        pipe_commands[pipe_count++] = element;
+        element = strtok(NULL, "|");
     }
     pipe_commands[pipe_count] = NULL; // null terminate the command list
 
@@ -106,22 +106,22 @@ void execute_single_command(char *command) { // function to execute all singular
     
     // this block of code parses the command into each command and argument and 
     // determines if any redirection or background job command are involved
-    char *token = strtok(command, " ");
+    char *element = strtok(command, " ");
     int i = 0;
-    while (token != NULL) {
-        if (strcmp(token, ">") == 0) {
+    while (element != NULL) {
+        if (strcmp(element, ">") == 0) {
             output_file = strtok(NULL, " ");
-        } else if (strcmp(token, ">>") == 0) {
+        } else if (strcmp(element, ">>") == 0) {
             output_file = strtok(NULL, " ");
             append = 1; // flag that output should be appended
-        } else if (strcmp(token, "<") == 0) {
+        } else if (strcmp(element, "<") == 0) {
             input_file = strtok(NULL, " ");
-        } else if (strcmp(token, "&") == 0) {
+        } else if (strcmp(element, "&") == 0) {
             background = 1; // flag that job should run in background
         } else {
-            args[i++] = token; 
+            args[i++] = element; 
         }
-        token = strtok(NULL, " ");
+        element = strtok(NULL, " ");
     }
     args[i] = NULL; // null terminate array
 
